@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
@@ -172,8 +171,52 @@ public class CFGrammar {
 			listOfProductions.remove(c);
 		}
 		
-		// TODO: Remove unreachable vars
+		// Find reachable vars
+		Set<String> rootProds = listOfProductions.get('S');
+		if (rootProds == null) {
+			System.out.println("This grammar is malformed");
+			return;
+		}
 		
+		Set<Character> reachableVars = new HashSet<>();
+		// Look for the initial set of reachable vars from S
+		for (String rhs: rootProds) {
+			for (char c: rhs.toCharArray()) {
+				if (Character.isUpperCase(c)) {
+					reachableVars.add(c);
+				}
+			}
+		}
+		
+		keepLooking = true;	// If new reachable vars are found, keep looking
+		while (keepLooking) {
+			keepLooking = false;
+			for (Character lhs: listOfProductions.keySet()) {
+				// Skip unreachable vars
+				if (!reachableVars.contains(lhs)) continue;	
+				
+				Set<String> prods = listOfProductions.get(reachableVars);
+				if (prods == null) {
+					System.out.println("This grammar is malformed");
+					return;
+				}
+				// Look for the initial set of reachable vars from S
+				for (String rhs: prods) {
+					for (char c: rhs.toCharArray()) {
+						if (Character.isUpperCase(c)) {
+							reachableVars.add(c);
+							keepLooking = true;
+						}
+					}
+				}
+			}
+		}
+		
+		// Remove unreachable Vars
+		for (Character c: listOfProductions.keySet()) {
+			if (!reachableVars.contains(c))
+				listOfProductions.remove(c);
+		}
 
 	}
 	
